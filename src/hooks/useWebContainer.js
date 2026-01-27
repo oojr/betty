@@ -5,6 +5,7 @@ import { remotionStarter } from "../templates/starter";
 import { nextjsStarter } from "../templates/nextjs";
 import { expoStarter } from "../templates/expo";
 import { documentStarter } from "../templates/document";
+import { presentationStarter } from "../templates/presentation";
 
 // Persist the boot promise on the window object to survive HMR
 const getBootPromise = () => {
@@ -77,6 +78,8 @@ export const useWebContainer = () => {
           template = expoStarter;
         } else if (projectType === "word") {
           template = documentStarter;
+        } else if (projectType === "slides") {
+          template = presentationStarter;
         } else {
           // Mock template for other types
           template = {
@@ -110,7 +113,7 @@ export const useWebContainer = () => {
         await webContainerInstance.mount(template);
         addLog("System: VFS Sync Complete.");
 
-        if (projectType === "video" || projectType === "web" || projectType === "mobile" || projectType === "word") {
+        if (projectType === "video" || projectType === "web" || projectType === "mobile" || projectType === "word" || projectType === "slides") {
           // --- Process 1: Installation ---
           setStatus("Calibrating dependencies...");
           addLog("Process: Running 'npm install' (optimized)...");
@@ -155,6 +158,9 @@ export const useWebContainer = () => {
           } else if (projectType === "word") {
             statusMsg = "Initializing Document Processor...";
             startCommand = "dev"; // Vite uses 'dev'
+          } else if (projectType === "slides") {
+            statusMsg = "Initializing Presentation Maker...";
+            startCommand = "dev";
           }
 
           setStatus(statusMsg);

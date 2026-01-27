@@ -11,7 +11,7 @@ const ApiKeyModal = () => {
   if (apiKey) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="fixed inset-0 bg-black-90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-gray-800 border border-yellow-600/50 p-6 rounded-lg max-w-md w-full shadow-2xl">
         <h2 className="text-xl font-bold text-yellow-600 mb-4 uppercase tracking-tight">
           System Authentication
@@ -185,15 +185,10 @@ const ChatInterface = () => {
             break;
 
           case "tool_use":
-            setWorkingTask({
-              name: event.tool_name,
-              summary: `Betty is running: ${event.tool_name}...`,
-            });
-            setStatus(`Executing ${event.tool_name}...`);
+            // Service handles store updates, but we ensure UI sync here
             break;
 
           case "tool_result":
-            setWorkingTask(null);
             setStatus("Betty finished a task.");
             break;
 
@@ -310,7 +305,7 @@ const ChatInterface = () => {
         {workingTask && (
           <div className="flex justify-start animate-in fade-in slide-in-from-left-2">
             <div className="bg-gray-800/40 border border-yellow-600/20 p-3 rounded-lg flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-yellow-500 animate-ping" />
+              <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
               <div className="flex flex-col">
                 <span className="text-[9px] text-yellow-600 font-bold uppercase tracking-tighter">
                   Executing: {workingTask.name}
@@ -327,9 +322,9 @@ const ChatInterface = () => {
           <div className="flex justify-start">
             <div className="bg-gray-800 border border-gray-700 p-3 rounded-lg px-5">
               <div className="flex space-x-1.5">
-                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce" />
-                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce [animation-delay:0.4s]" />
+                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce [animation-duration:1s]" />
+                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce [animation-duration:1s] [animation-delay:0.2s]" />
+                <div className="w-1.5 h-1.5 bg-yellow-600 rounded-full animate-bounce [animation-duration:1s] [animation-delay:0.4s]" />
               </div>
             </div>
           </div>

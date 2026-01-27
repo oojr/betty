@@ -31,6 +31,8 @@ export class GeminiService {
           return "You are working on an Expo (React Native) project. 'App.js' is the main entry point. Use standard React Native components. Focus on mobile app development tasks.";
         case 'word':
           return "You are working on a Document Processor. It uses the 'docx' library to generate files. You MUST update 'src/App.jsx' to change the document structure, content, or generation logic. DO NOT use 'src/content.json' unless you are specifically refactoring. Focus on document generation and manipulation tasks.";
+        case 'slides':
+          return "You are working on a Presentation Maker. It uses 'pptxgenjs' to generate PowerPoint files. You MUST update 'src/App.jsx' to change the slide layout, design, or content. Modify the 'generatePresentation' function to add/remove slides or change styles. There are NO input fields in the UI, so everything must be hardcoded in the generation logic by you.";
         default:
           return "You are working on a project with an unspecified type. Proceed with general development tasks.";
       }
