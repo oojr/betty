@@ -62,28 +62,55 @@ export const executeTool = async (name, args) => {
 
   if (!wc) return "Error: WebContainer is not booted yet.";
 
+  // Normalize paths: remove leading slash if present, as WebContainer.fs uses relative paths from root
+  const normalizePath = (path) => path.startsWith('/') ? path.slice(1) : path;
+
   try {
     switch (name) {
       case "readFile": {
-        const content = await wc.fs.readFile(args.path, "utf-8");
-        return content; // Return raw content; model will reason about it
+        const path = normalizePath(args.path);
+        const content = await wc.fs.readFile(path, "utf-8");
+        return content;
       }
 
       case "ls": {
-        const entries = await wc.fs.readdir(args.path, { withFileTypes: true });
+        const path = normalizePath(args.path || ".");
+        const entries = await wc.fs.readdir(path, { withFileTypes: true });
         return entries
           .map((e) => `${e.isDirectory() ? "[DIR] " : "[FILE] "}${e.name}`)
           .join("\n");
       }
 
       case "writeFile": {
-        await wc.fs.writeFile(args.path, args.content);
-        return `Successfully wrote ${args.path}.`;
+        const path = normalizePath(args.path);
+        await wc.fs.writeFile(path, args.content);
+        return `Successfully wrote ${path}.`;
       }
 
       case "runCommand": {
+        const command = args.command.trim();
+        
+        // Guard against redundant server starts or project initialization
+        if (
+          command.startsWith("npm run dev") || 
+          command.startsWith("npm start") || 
+          command.startsWith("npm run start") || 
+          command.startsWith("next dev") ||
+          command.startsWith("npm run web") ||
+          command.startsWith("expo start") ||
+          command.includes("create-next-app") ||
+          command.includes("create-expo-app") ||
+          command.includes("create-vite") ||
+          command.includes("npm init") ||
+          command.includes("npm create") ||
+          command.includes("npx create") ||
+          command.startsWith("vite")
+        ) {
+          return "Notice: The project is already initialized and the development server is running. Do not try to recreate the project or start the server. You can directly edit the files in the VFS.";
+        }
+
         // Simple command parser for WebContainer spawn
-        const parts = args.command.split(" ");
+        const parts = command.split(" ");
         const cmd = parts[0];
         const cmdArgs = parts.slice(1);
 

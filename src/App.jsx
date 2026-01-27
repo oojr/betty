@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDirectorStore } from "./store";
 import { useWebContainer } from "./hooks/useWebContainer";
 import { GeminiService } from "./services/gemini";
+import BettyImage from "./assets/slidebits-betty.jpg";
 
 const ApiKeyModal = () => {
   const { apiKey, setApiKey } = useDirectorStore();
@@ -38,9 +39,118 @@ const ApiKeyModal = () => {
   );
 };
 
-const ChatInterface = () => {
-  const { messages, addMessage, apiKey, setStatus, workingTask } =
+const ProjectSelectionModal = () => {
+  const { apiKey, projectType, setProjectType, clearHistory } =
     useDirectorStore();
+
+  if (!apiKey || projectType) return null;
+
+  const projects = [
+    {
+      id: "slides",
+      title: "Presentation Slides",
+      desc: "Create stunning slide decks with markdown and AI-generated visuals.",
+      icon: "📊",
+      greeting:
+        "Betty is ready to draft your presentation. What is the topic of your slides?",
+    },
+    {
+      id: "mobile",
+      title: "Mobile Application",
+      desc: "Prototype React Native Expo apps with interactive previews.",
+      icon: "📱",
+      greeting:
+        "Mobile systems active. What kind of app are we building today?",
+    },
+    {
+      id: "web",
+      title: "Responsive Website",
+      desc: "Make a responsive website with Next.js and Tailwind CSS.",
+      icon: "🌐",
+      greeting:
+        "Alright, let's create a responsive website with Next.js and Tailwind CSS. What is the main purpose or topic of the site?",
+    },
+    {
+      id: "video",
+      title: "Motion Video",
+      desc: "Programmatic video creation using Remotion. React-based animation.",
+      icon: "🎬",
+      greeting:
+        "Hello, I'm Betty. Ready to direct your next high-performance video.",
+    },
+    {
+      id: "excel",
+      title: "Data Analysis",
+      desc: "Upload Excel sheets for deep insights and visualization dashboards.",
+      icon: "📈",
+      greeting:
+        "Data analytics core online. Please provide the data you'd like me to analyze.",
+    },
+    {
+      id: "word",
+      title: "Word Documents",
+      desc: "Generate professional reports, contracts, and letters.",
+      icon: "📝",
+      greeting:
+        "Document processor ready. What kind of report or contract should we draft?",
+    },
+  ];
+
+  const handleSelect = (p) => {
+    // Set project type FIRST so modal closes
+    setProjectType(p.id);
+    // Initialize chat history IMMEDIATELY
+    clearHistory(p.greeting);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-gray-800 border border-yellow-600/30 p-8 rounded-xl max-w-4xl w-full shadow-2xl">
+        <img
+          src={BettyImage}
+          alt="Betty Agent"
+          className="mx-auto mb-6 h-40 object-cover border-2 border-yellow-600/50 shadow-lg"
+        />
+        <h2 className="text-2xl font-bold text-yellow-600 mb-2 uppercase tracking-tight text-center">
+          Select Mission Profile
+        </h2>
+        <p className="text-gray-400 mb-8 text-center text-sm">
+          Betty is ready. Choose a directive to initialize the appropriate
+          neural pathways.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => handleSelect(p)}
+              className="group flex flex-col items-start p-4 bg-gray-900/50 border border-gray-700 hover:border-yellow-600 rounded-lg transition-all hover:bg-gray-800 text-left"
+            >
+              <div className="text-2xl mb-3 group-hover:scale-110 transition-transform duration-300">
+                {p.icon}
+              </div>
+              <h3 className="text-yellow-500 font-bold uppercase text-xs tracking-wider mb-1 group-hover:text-yellow-400">
+                {p.title}
+              </h3>
+              <p className="text-gray-400 text-xs leading-relaxed">{p.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ChatInterface = () => {
+  const {
+    messages,
+    addMessage,
+    apiKey,
+    setStatus,
+    workingTask,
+    setProjectType,
+    setWorkingTask,
+  } = useDirectorStore();
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollRef = useRef(null);
@@ -57,44 +167,104 @@ const ChatInterface = () => {
     const userMsg = input;
     setInput("");
 
-    // Store message in the new content object format
     addMessage({ role: "user", parts: [{ text: userMsg }] });
     setIsProcessing(true);
 
     try {
-      const service = new GeminiService(apiKey);
-      // We pass the full history (which now includes thought signatures)
-      const responseText = await service.sendMessage(userMsg, messages);
+      const cli = new GeminiService(apiKey);
+      const projectType = useDirectorStore.getState().projectType;
 
-      addMessage({
-        role: "model",
-        parts: [{ text: responseText }],
-      });
+      let currentAssistantText = "";
+
+      for await (const event of cli.sendMessage(userMsg, messages)) {
+        switch (event.type) {
+          case "message":
+            if (event.role === "assistant") {
+              currentAssistantText += event.content || "";
+            }
+            break;
+
+          case "tool_use":
+            setWorkingTask({
+              name: event.tool_name,
+              summary: `Betty is running: ${event.tool_name}...`,
+            });
+            setStatus(`Executing ${event.tool_name}...`);
+            break;
+
+          case "tool_result":
+            setWorkingTask(null);
+            setStatus("Betty finished a task.");
+            break;
+
+          case "error":
+            addMessage({
+              role: "model",
+              parts: [{ text: `System Error: ${event.message}` }],
+            });
+            break;
+
+          case "result":
+            if (currentAssistantText) {
+              addMessage({
+                role: "model",
+                parts: [{ text: currentAssistantText }],
+              });
+            }
+            if (event.status === "success") {
+              setStatus("Betty is awaiting instructions...");
+            } else {
+              setStatus("Betty encountered an issue.");
+            }
+            break;
+        }
+      }
     } catch (error) {
       addMessage({
         role: "model",
-        parts: [
-          { text: "CRITICAL_ERROR: Reasoning chain broken. Please refresh." },
-        ],
+        parts: [{ text: `CRITICAL_ERROR: ${error.message}` }],
       });
-      setStatus("Error: Service communication failed.");
+      setStatus("Error: Reasoning engine failure.");
     } finally {
       setIsProcessing(false);
+      setWorkingTask(null);
     }
   };
 
   return (
     <div className="flex flex-col h-full bg-gray-900 border-r border-gray-700">
-      <div className="p-4 border-b border-gray-700 bg-gray-800">
-        <h1 className="text-xl font-bold text-yellow-600 tracking-tighter">
-          SLIDEBITS <span className="text-gray-100 font-light">BETTY</span>
-        </h1>
-        <div className="flex items-center gap-2 mt-1">
-          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-          <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-            Gemini 3 Flash Agent
-          </p>
+      <div className="p-4 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold text-yellow-600 tracking-tighter">
+            SLIDEBITS <span className="text-gray-100 font-light">BETTY</span>
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+              Gemini 3 Flash Agent
+            </p>
+          </div>
         </div>
+        <button
+          onClick={() => setProjectType(null)}
+          title="Reset Mission Profile"
+          className="text-gray-500 hover:text-yellow-600 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
       </div>
 
       <div
@@ -190,11 +360,86 @@ const ChatInterface = () => {
   );
 };
 
-const Stage = () => {
-  const { status, previewUrl } = useDirectorStore();
+const LogTerminal = () => {
+  const { logs, clearLogs, status } = useDirectorStore();
+  const [isOpen, setIsOpen] = useState(false);
+  const logEndRef = useRef(null);
+
+  // Auto-open on error
+  useEffect(() => {
+    if (
+      status &&
+      (status.includes("Error") ||
+        status.includes("Failed") ||
+        status.includes("Malfunction"))
+    ) {
+      setIsOpen(true);
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-800">
+    <div
+      className={`absolute bottom-14 left-0 right-0 bg-black/95 border-t border-yellow-600/30 transition-all duration-300 ease-in-out z-20 ${
+        isOpen ? "h-64" : "h-0"
+      } overflow-hidden`}
+    >
+      <div className="flex justify-between items-center px-4 py-2 bg-gray-900 border-b border-gray-800">
+        <span className="text-[10px] text-yellow-600 font-bold uppercase tracking-widest flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-yellow-600 animate-pulse" />
+          System_VFS_Output
+        </span>
+        <div className="flex gap-4">
+          <button
+            onClick={clearLogs}
+            className="text-[9px] text-gray-500 hover:text-gray-300 uppercase tracking-tighter"
+          >
+            Clear_Buffer
+          </button>
+          <button
+            onClick={() => setIsOpen(false)}
+            className="text-[9px] text-gray-400 hover:text-white uppercase"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+      <div className="p-4 font-mono text-[11px] text-gray-300 h-[calc(100%-36px)] overflow-y-auto selection:bg-yellow-600/30">
+        {logs.map((log, i) => (
+          <div key={i} className="mb-1 break-all whitespace-pre-wrap">
+            <span className="text-yellow-900 mr-2">
+              [{i.toString().padStart(3, "0")}]
+            </span>
+            {log}
+          </div>
+        ))}
+        <div ref={logEndRef} />
+      </div>
+
+      {/* Toggle Button when closed */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="absolute -top-8 right-4 bg-gray-900 border border-yellow-600/30 px-3 py-1 rounded-t text-[10px] text-yellow-600 font-bold uppercase hover:bg-gray-800 transition-colors"
+        >
+          View_Logs
+        </button>
+      )}
+    </div>
+  );
+};
+
+const Stage = () => {
+  const { status, previewUrl, logs } = useDirectorStore();
+  const lastLog = logs.length > 0 ? logs[logs.length - 1] : "Initializing...";
+
+  return (
+    <div className="flex flex-col h-full bg-gray-800 relative">
       <div className="flex-1 relative bg-black flex items-center justify-center">
         {previewUrl ? (
           <iframe
@@ -203,16 +448,20 @@ const Stage = () => {
             title="Output"
           />
         ) : (
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-center gap-4 p-8 text-center">
             <div className="w-10 h-10 border-2 border-yellow-600/10 border-t-yellow-600 rounded-full animate-spin" />
             <div className="text-gray-500 font-mono text-[10px] uppercase tracking-[0.3em]">
               Awaiting_VFS_Build
+            </div>
+            {/* Show last log line here for better visibility */}
+            <div className="max-w-md text-yellow-600/70 font-mono text-[10px] truncate animate-pulse">
+              {lastLog.replace("System: ", "").replace("Process: ", "")}
             </div>
           </div>
         )}
       </div>
 
-      <div className="h-14 bg-gray-900 border-t border-yellow-600/20 flex items-center px-6">
+      <div className="h-14 bg-gray-900 border-t border-yellow-600/20 flex items-center px-6 relative z-30">
         <div className="flex items-center gap-4 w-full">
           <div className="h-2 w-2 rounded-full bg-yellow-600 shadow-[0_0_8px_rgba(202,138,4,0.6)]" />
           <div className="flex-1">
@@ -240,6 +489,7 @@ function App() {
   return (
     <div className="flex h-screen w-screen overflow-hidden text-gray-100 font-sans selection:bg-yellow-600/30">
       <ApiKeyModal />
+      <ProjectSelectionModal />
       <div className="w-[400px] flex-shrink-0">
         <ChatInterface />
       </div>

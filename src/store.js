@@ -4,16 +4,7 @@ export const useDirectorStore = create((set) => ({
   // --- Gemini 3 Chat History ---
   // We now store the full "Content" objects rather than just strings.
   // This ensures Thought Signatures are preserved across the entire conversation.
-  messages: [
-    {
-      role: "model",
-      parts: [
-        {
-          text: "Hello, I'm Betty. Ready to direct your next high-performance video.",
-        },
-      ],
-    },
-  ],
+  messages: [],
 
   // Updated addMessage to handle complex Gemini 3 content parts
   addMessage: (contentObj) =>
@@ -35,6 +26,15 @@ export const useDirectorStore = create((set) => ({
   previewUrl: null,
   setPreviewUrl: (url) => set({ previewUrl: url }),
 
+  // --- Logs ---
+  logs: [],
+  addLog: (log) => set((state) => ({ logs: [...state.logs.slice(-100), log] })), // Keep last 100 logs
+  clearLogs: () => set({ logs: [] }),
+
+  // --- Project Selection ---
+  projectType: null,
+  setProjectType: (type) => set({ projectType: type }),
+
   // --- Gemini 3 Configuration ---
   // Note: We removed the standalone thoughtSignature state because
   // Gemini 3 signatures are now embedded directly within the message parts.
@@ -46,10 +46,15 @@ export const useDirectorStore = create((set) => ({
   },
 
   // Helper to clear history
-  clearHistory: () =>
+  clearHistory: (initialMessage) =>
     set({
-      messages: [
-        { role: "model", parts: [{ text: "Systems reset. How can I help?" }] },
-      ],
+      messages: initialMessage
+        ? [{ role: "model", parts: [{ text: initialMessage }] }]
+        : [
+            {
+              role: "model",
+              parts: [{ text: "Systems reset. How can I help?" }],
+            },
+          ],
     }),
 }));
