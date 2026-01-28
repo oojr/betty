@@ -23,16 +23,18 @@ export class GeminiService {
 
     const getProjectTypeInstructions = (type) => {
       switch (type) {
-        case 'video':
+        case "video":
           return "You are working on a Remotion project. Files are in 'src/'. 'Root.jsx' and 'Composition.jsx' are key entry points. Focus on video generation tasks.";
-        case 'web':
+        case "web":
           return "You are working on a Next.js project (Page Router/App Router as provided) with Tailwind CSS. Use the 'app/' directory for files. Focus on web development tasks.";
-        case 'mobile':
+        case "mobile":
           return "You are working on an Expo (React Native) project. 'App.js' is the main entry point. Use standard React Native components. Focus on mobile app development tasks.";
-        case 'word':
+        case "word":
           return "You are working on a Document Processor. It uses the 'docx' library to generate files. You MUST update 'src/App.jsx' to change the document structure, content, or generation logic. DO NOT use 'src/content.json' unless you are specifically refactoring. Focus on document generation and manipulation tasks.";
-        case 'slides':
+        case "slides":
           return "You are working on a Presentation Maker. It uses 'pptxgenjs' to generate PowerPoint files. You MUST update 'src/App.jsx' to change the slide layout, design, or content. Modify the 'generatePresentation' function to add/remove slides or change styles. There are NO input fields in the UI, so everything must be hardcoded in the generation logic by you.";
+case 'excel':
+          return "You are working on a Data Analysis Dashboard. It uses 'react-chartjs-2' and 'chart.js' for visualization. You MUST update 'src/App.jsx' DIRECTLY to change the chart data, type, or layout. Modify the 'chartLabels', 'chartDatasetLabel', and 'chartDatasetData' state variables in 'src/App.jsx' to reflect user requests. DO NOT create new component files. All code should reside in 'src/App.jsx' for this mission. You can also handle CSV/Excel file uploads. Focus on data visualization tasks.";
         default:
           return "You are working on a project with an unspecified type. Proceed with general development tasks.";
       }
@@ -110,7 +112,13 @@ export class GeminiService {
             timestamp: new Date().toISOString(),
           };
 
-          setWorkingTask({ name, summary: `Executing: ${name}...` });
+          const summary = args.file_path
+            ? `Editing ${args.file_path}...`
+            : args.command
+              ? `Running: ${args.command}`
+              : `Processing with ${name}...`;
+
+          setWorkingTask({ name, summary });
           setStatus(`Executing: ${name}...`);
 
           const toolResult = await executeTool(name, args);

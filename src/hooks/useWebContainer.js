@@ -6,10 +6,11 @@ import { nextjsStarter } from "../templates/nextjs";
 import { expoStarter } from "../templates/expo";
 import { documentStarter } from "../templates/document";
 import { presentationStarter } from "../templates/presentation";
+import { chartsStarter } from "../templates/charts";
 
 // Persist the boot promise on the window object to survive HMR
 const getBootPromise = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     if (!window.__BETTY_BOOT_PROMISE__) {
       window.__BETTY_BOOT_PROMISE__ = WebContainer.boot();
     }
@@ -27,7 +28,7 @@ export const useWebContainer = () => {
     webContainerInstance,
     addLog,
   } = useDirectorStore();
-  
+
   const loadingProject = useRef(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export const useWebContainer = () => {
         setStatus("Core Initialization Failed.");
         addLog(`Critical: Boot error - ${error.message}`);
         // Reset promise on failure to allow retry
-        if (typeof window !== 'undefined') window.__BETTY_BOOT_PROMISE__ = null;
+        if (typeof window !== "undefined") window.__BETTY_BOOT_PROMISE__ = null;
       }
     };
 
@@ -67,7 +68,7 @@ export const useWebContainer = () => {
       try {
         setStatus(`Initializing ${projectType.toUpperCase()} Environment...`);
         addLog(`System: Preparing ${projectType} template...`);
-        
+
         // Select Template based on projectType
         let template;
         if (projectType === "video") {
@@ -80,6 +81,8 @@ export const useWebContainer = () => {
           template = documentStarter;
         } else if (projectType === "slides") {
           template = presentationStarter;
+        } else if (projectType === "excel") {
+          template = chartsStarter;
         } else {
           // Mock template for other types
           template = {
@@ -113,11 +116,18 @@ export const useWebContainer = () => {
         await webContainerInstance.mount(template);
         addLog("System: VFS Sync Complete.");
 
-        if (projectType === "video" || projectType === "web" || projectType === "mobile" || projectType === "word" || projectType === "slides") {
+        if (
+          projectType === "video" ||
+          projectType === "web" ||
+          projectType === "mobile" ||
+          projectType === "word" ||
+          projectType === "slides" ||
+          projectType === "excel"
+        ) {
           // --- Process 1: Installation ---
           setStatus("Calibrating dependencies...");
           addLog("Process: Running 'npm install' (optimized)...");
-          
+
           // Use --no-package-lock and --prefer-offline for speed and stability in VFS
           const installProcess = await webContainerInstance.spawn("npm", [
             "install",
@@ -125,7 +135,7 @@ export const useWebContainer = () => {
             "--no-audit",
             "--no-fund",
             "--no-optional",
-            "--legacy-peer-deps"
+            "--legacy-peer-deps",
           ]);
 
           installProcess.output.pipeTo(
@@ -138,7 +148,9 @@ export const useWebContainer = () => {
 
           const exitCode = await installProcess.exit;
           if (exitCode !== 0) {
-            addLog(`Error: Installation failed with exit code ${exitCode}. Check logs above.`);
+            addLog(
+              `Error: Installation failed with exit code ${exitCode}. Check logs above.`,
+            );
             throw new Error("Calibration failed.");
           }
           addLog("System: Dependencies calibrated successfully.");
@@ -154,18 +166,21 @@ export const useWebContainer = () => {
             startCommand = "dev";
           } else if (projectType === "mobile") {
             statusMsg = "Starting Expo Web Console...";
-            startCommand = "web";
+            startCommand = "dev";
           } else if (projectType === "word") {
             statusMsg = "Initializing Document Processor...";
             startCommand = "dev"; // Vite uses 'dev'
           } else if (projectType === "slides") {
             statusMsg = "Initializing Presentation Maker...";
             startCommand = "dev";
+          } else if (projectType === "excel") {
+            statusMsg = "Initializing Data Analysis Core...";
+            startCommand = "dev";
           }
 
           setStatus(statusMsg);
           addLog(`Process: Executing 'npm run ${startCommand}'...`);
-          
+
           const startProcess = await webContainerInstance.spawn("npm", [
             "run",
             startCommand,

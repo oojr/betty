@@ -11,7 +11,7 @@ const ApiKeyModal = () => {
   if (apiKey) return null;
 
   return (
-              <div className="fixed inset-0 bg-black-90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black-90 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-gray-800 border border-yellow-600/50 p-6 rounded-lg max-w-md w-full shadow-2xl">
         <h2 className="text-xl font-bold text-yellow-600 mb-4 uppercase tracking-tight">
           System Authentication
@@ -154,6 +154,7 @@ const ChatInterface = () => {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const scrollRef = useRef(null);
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -161,11 +162,40 @@ const ChatInterface = () => {
     }
   }, [messages, workingTask]);
 
+  const handleInput = (e) => {
+    const target = e.target;
+    target.style.height = "auto";
+    target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+    setInput(target.value);
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const content = evt.target.result;
+      // Append to input
+      const fileMsg = `\n\n[Attached File: ${file.name}]\n\`\`\`\n${content.slice(0, 5000)}\n\`\`\``;
+      setInput((prev) => prev + fileMsg);
+
+      if (textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+        }, 0);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const handleSend = async () => {
     if (!input.trim() || !apiKey || isProcessing) return;
 
     const userMsg = input;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
 
     addMessage({ role: "user", parts: [{ text: userMsg }] });
     setIsProcessing(true);
@@ -304,13 +334,13 @@ const ChatInterface = () => {
         {/* Action Indicator (Tool execution) */}
         {workingTask && (
           <div className="flex justify-start animate-in fade-in slide-in-from-left-2">
-            <div className="bg-gray-800/40 border border-yellow-600/20 p-3 rounded-lg flex items-center gap-3">
-              <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" />
+            <div className="bg-gray-800/40 border border-yellow-600/20 p-3 rounded-lg flex items-start gap-3">
+              <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse mt-1.5" />
               <div className="flex flex-col">
                 <span className="text-[9px] text-yellow-600 font-bold uppercase tracking-tighter">
                   Executing: {workingTask.name}
                 </span>
-                <span className="text-xs text-gray-400 font-mono italic truncate max-w-[220px]">
+                <span className="text-xs text-gray-400 font-mono italic line-clamp-2">
                   {workingTask.summary}
                 </span>
               </div>
@@ -332,20 +362,42 @@ const ChatInterface = () => {
       </div>
 
       <div className="p-4 bg-gray-800 border-t border-gray-700">
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="flex gap-2 items-end">
+          <label className="cursor-pointer p-2 text-gray-400 hover:text-yellow-600 transition-colors mb-0.5">
+            <input type="file" className="hidden" onChange={handleFileSelect} />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+            </svg>
+          </label>
+          <textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onChange={handleInput}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={apiKey ? "Command Betty..." : "Waiting for API Key..."}
             disabled={!apiKey || isProcessing}
-            className="flex-1 bg-gray-900 border border-gray-700 rounded px-4 py-2 text-gray-100 focus:outline-none focus:border-yellow-600 transition-all text-sm disabled:opacity-50"
+            rows={1}
+            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-gray-100 focus:outline-none focus:border-yellow-600 transition-all text-sm disabled:opacity-50 resize-none max-h-[200px]"
           />
           <button
             onClick={handleSend}
             disabled={!apiKey || isProcessing}
-            className="bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-bold px-5 py-2 rounded transition-all uppercase text-[10px] tracking-widest disabled:opacity-50"
+            className="bg-yellow-600 hover:bg-yellow-500 text-gray-900 font-bold px-5 py-2 rounded-lg transition-all uppercase text-[10px] tracking-widest disabled:opacity-50 h-[38px] mb-[1px]"
           >
             {isProcessing ? "Processing" : "Run"}
           </button>
