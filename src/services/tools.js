@@ -63,7 +63,7 @@ export const executeTool = async (name, args) => {
   if (!wc) return "Error: WebContainer is not booted yet.";
 
   // Normalize paths: remove leading slash if present, as WebContainer.fs uses relative paths from root
-  const normalizePath = (path) => path.startsWith('/') ? path.slice(1) : path;
+  const normalizePath = (path) => (path.startsWith("/") ? path.slice(1) : path);
 
   try {
     switch (name) {
@@ -84,20 +84,40 @@ export const executeTool = async (name, args) => {
       case "writeFile": {
         const path = normalizePath(args.path);
         await wc.fs.writeFile(path, args.content);
+
+        // --- FIX: Force Preview Refresh ---
+        // Get the current URL and append/update a timestamp to force the iframe to reload
+        const { previewUrl, setPreviewUrl } = store;
+
+        if (previewUrl && setPreviewUrl) {
+          try {
+            // Create a URL object to safely handle query params
+            const urlObj = new URL(previewUrl);
+            // Set a 't' param to the current timestamp
+            urlObj.searchParams.set("t", Date.now().toString());
+            // Update the store, which triggers the UI to reload the iframe
+            setPreviewUrl(urlObj.toString());
+          } catch (err) {
+            console.warn("Auto-refresh failed:", err);
+          }
+        }
+        // ----------------------------------
+
         return `Successfully wrote ${path}.`;
       }
 
       case "runCommand": {
         const command = args.command.trim();
-        
+
         // Guard against redundant server starts or project initialization
         if (
-          command.startsWith("npm run dev") || 
-          command.startsWith("npm start") || 
-          command.startsWith("npm run start") || 
+          command.startsWith("npm run dev") ||
+          command.startsWith("npm start") ||
+          command.startsWith("npm run start") ||
           command.startsWith("next dev") ||
           command.startsWith("npm run web") ||
           command.startsWith("expo start") ||
+          command.startsWith("npx expo lint") ||
           command.includes("create-next-app") ||
           command.includes("create-expo-app") ||
           command.includes("create-vite") ||

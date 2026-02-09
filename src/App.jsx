@@ -60,7 +60,7 @@ const ProjectSelectionModal = () => {
       desc: "Prototype React Native Expo apps with interactive previews.",
       icon: "📱",
       greeting:
-        "Mobile systems active. What kind of app are we building today?",
+        "Mobile systems active. I will generate and edit the Expo React Native project files in the VFS for you. What kind of app are we building today?",
     },
     {
       id: "web",
@@ -482,18 +482,29 @@ const LogTerminal = () => {
 };
 
 const Stage = () => {
-  const { status, previewUrl, logs } = useDirectorStore();
+  const { status, previewUrl, logs, projectType } = useDirectorStore();
   const lastLog = logs.length > 0 ? logs[logs.length - 1] : "Initializing...";
 
   return (
     <div className="flex flex-col h-full bg-gray-800 relative">
       <div className="flex-1 relative bg-black flex items-center justify-center">
         {previewUrl ? (
-          <iframe
-            src={previewUrl}
-            className="w-full h-full border-none"
-            title="Output"
-          />
+          projectType === "mobile" ? (
+            <div className="relative w-[375px] h-[812px] border-[14px] border-gray-900 rounded-[3rem] shadow-2xl bg-black overflow-hidden ring-1 ring-gray-800">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1/2 h-7 bg-gray-900 rounded-b-xl z-20"></div>
+              <iframe
+                src={previewUrl}
+                className="w-full h-full border-none"
+                title="Output"
+              />
+            </div>
+          ) : (
+            <iframe
+              src={previewUrl}
+              className="w-full h-full border-none"
+              title="Output"
+            />
+          )
         ) : (
           <div className="flex flex-col items-center gap-4 p-8 text-center">
             <div className="w-10 h-10 border-2 border-yellow-600/10 border-t-yellow-600 rounded-full animate-spin" />
