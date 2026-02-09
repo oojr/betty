@@ -46,10 +46,15 @@ export const useDirectorStore = create((set) => ({
   },
 
   // Helper to clear history
-  clearHistory: (initialMessage) =>
+  clearHistory: (initialMessage, bootstrap) =>
     set({
       messages: initialMessage
-        ? [{ role: "model", parts: [{ text: initialMessage }] }]
+        ? [
+            ...(bootstrap
+              ? [{ role: "user", parts: [{ text: bootstrap }], hidden: true }]
+              : []),
+            { role: "model", parts: [{ text: initialMessage }] },
+          ]
         : [
             {
               role: "model",

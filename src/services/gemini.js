@@ -268,7 +268,7 @@ export class GeminiService {
           - Everything must be hardcoded in \`generatePresentation\`.
           `;
         case "excel":
-          return `You are working on a Data Analysis Dashboard using 'react-chartjs-2' and 'chart.js'.
+          return `You are working on a Data Analysis Dashboard using 'recharts'.
 
           CRITICAL RULES:
           1. Update 'src/App.jsx' DIRECTLY - DO NOT create new component files
@@ -281,132 +281,113 @@ export class GeminiService {
           \`\`\`javascript
           // In src/App.jsx, find this section:
           // -- CHART DATA START (Keep this comment line) --
-          const [data, setData] = useState({
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [
-              {
-                label: 'Sales 2024',
-                data: [12, 19, 3, 5, 2, 3],
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1,
-              },
-            ],
-          });
+          const [data, setData] = useState([
+            { name: 'Jan', value: 12 },
+            { name: 'Feb', value: 19 },
+            { name: 'Mar', value: 3 },
+            { name: 'Apr', value: 5 },
+            { name: 'May', value: 2 },
+            { name: 'Jun', value: 3 },
+          ]);
           // -- CHART DATA END (Keep this comment line) --
 
           // To change the default chart type, modify this line:
           const [chartType, setChartType] = useState('bar'); // Options: 'bar', 'line', 'pie'
           \`\`\`
 
+          DATA FORMAT FOR RECHARTS:
+          - Data is an array of objects
+          - Each object represents one data point
+          - Use 'name' for labels (x-axis or pie slices)
+          - Use descriptive keys for data values (e.g., 'value', 'sales', 'revenue')
+
           EXAMPLES:
 
           Change to quarterly data with line chart:
           \`\`\`javascript
-          const [data, setData] = useState({
-            labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-            datasets: [
-              {
-                label: 'Revenue 2024',
-                data: [45000, 52000, 48000, 61000],
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1,
-              },
-            ],
-          });
+          const [data, setData] = useState([
+            { quarter: 'Q1', revenue: 45000 },
+            { quarter: 'Q2', revenue: 52000 },
+            { quarter: 'Q3', revenue: 48000 },
+            { quarter: 'Q4', revenue: 61000 },
+          ]);
 
           const [chartType, setChartType] = useState('line');
           \`\`\`
 
-          Multiple datasets (comparison) as pie chart:
+          Pie chart with market share:
           \`\`\`javascript
-          const [data, setData] = useState({
-            labels: ['Product A', 'Product B', 'Product C', 'Product D'],
-            datasets: [
-              {
-                label: 'Market Share',
-                data: [35, 25, 20, 20],
-                backgroundColor: [
-                  'rgba(59, 130, 246, 0.5)',
-                  'rgba(239, 68, 68, 0.5)',
-                  'rgba(34, 197, 94, 0.5)',
-                  'rgba(168, 85, 247, 0.5)',
-                ],
-                borderColor: [
-                  'rgba(59, 130, 246, 1)',
-                  'rgba(239, 68, 68, 1)',
-                  'rgba(34, 197, 94, 1)',
-                  'rgba(168, 85, 247, 1)',
-                ],
-                borderWidth: 1,
-              },
-            ],
-          });
+          const [data, setData] = useState([
+            { name: 'Product A', value: 35 },
+            { name: 'Product B', value: 25 },
+            { name: 'Product C', value: 20 },
+            { name: 'Product D', value: 20 },
+          ]);
 
           const [chartType, setChartType] = useState('pie');
           \`\`\`
 
-          Multiple datasets for bar/line charts:
+          Multiple data series (comparison):
           \`\`\`javascript
-          const [data, setData] = useState({
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-            datasets: [
-              {
-                label: 'Sales 2024',
-                data: [12, 19, 15, 25, 22],
-                backgroundColor: 'rgba(59, 130, 246, 0.5)',
-                borderColor: 'rgba(59, 130, 246, 1)',
-                borderWidth: 1,
-              },
-              {
-                label: 'Sales 2023',
-                data: [8, 11, 13, 17, 19],
-                backgroundColor: 'rgba(239, 68, 68, 0.5)',
-                borderColor: 'rgba(239, 68, 68, 1)',
-                borderWidth: 1,
-              },
-            ],
-          });
+          const [data, setData] = useState([
+            { month: 'Jan', sales2024: 12, sales2023: 8 },
+            { month: 'Feb', sales2024: 19, sales2023: 11 },
+            { month: 'Mar', sales2024: 15, sales2023: 13 },
+            { month: 'Apr', sales2024: 25, sales2023: 17 },
+            { month: 'May', sales2024: 22, sales2023: 19 },
+          ]);
 
           const [chartType, setChartType] = useState('bar');
           \`\`\`
 
-          COLOR OPTIONS (Tailwind colors in rgba):
+          IMPORTANT NOTES FOR MULTIPLE SERIES:
+          - When adding multiple data series, you'll also need to update the chart components
+          - For BarChart: Add multiple <Bar> components with different dataKey props
+          - For LineChart: Add multiple <Line> components with different dataKey props
+          - Example for comparison chart:
           \`\`\`javascript
-          // Blue
-          backgroundColor: 'rgba(59, 130, 246, 0.5)',
-          borderColor: 'rgba(59, 130, 246, 1)',
-
-          // Red
-          backgroundColor: 'rgba(239, 68, 68, 0.5)',
-          borderColor: 'rgba(239, 68, 68, 1)',
-
-          // Green
-          backgroundColor: 'rgba(34, 197, 94, 0.5)',
-          borderColor: 'rgba(34, 197, 94, 1)',
-
-          // Purple
-          backgroundColor: 'rgba(168, 85, 247, 0.5)',
-          borderColor: 'rgba(168, 85, 247, 1)',
-
-          // Cyan
-          backgroundColor: 'rgba(6, 182, 212, 0.5)',
-          borderColor: 'rgba(6, 182, 212, 1)',
-
-          // Yellow
-          backgroundColor: 'rgba(234, 179, 8, 0.5)',
-          borderColor: 'rgba(234, 179, 8, 1)',
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <XAxis dataKey="month" stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="sales2024" fill="#3b82f6" name="Sales 2024" />
+            <Bar dataKey="sales2023" fill="#ef4444" name="Sales 2023" />
+          </BarChart>
           \`\`\`
 
-          PIE CHART NOTE:
-          For pie charts, use arrays of colors (one per slice) instead of single colors:
+          COLOR OPTIONS (hex codes):
           \`\`\`javascript
-          backgroundColor: [
-            'rgba(59, 130, 246, 0.5)',   // slice 1
-            'rgba(239, 68, 68, 0.5)',    // slice 2
-            'rgba(34, 197, 94, 0.5)',    // slice 3
-          ],
+          // Blue
+          fill="#3b82f6"
+
+          // Red
+          fill="#ef4444"
+
+          // Green
+          fill="#22c55e"
+
+          // Purple
+          fill="#a855f7"
+
+          // Cyan
+          fill="#06b6d4"
+
+          // Yellow
+          fill="#eab308"
+
+          // Orange
+          fill="#f97316"
+
+          // Pink
+          fill="#ec4899"
+          \`\`\`
+
+          PIE CHART COLORS:
+          Pie charts use the COLORS array defined in App.jsx:
+          \`\`\`javascript
+          const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
           \`\`\`
 
           TASK EXECUTION STEPS:
@@ -414,23 +395,23 @@ export class GeminiService {
           2. Locate the \`// -- CHART DATA START\` marker
           3. Replace the data state initialization between START and END markers
           4. If user wants a specific chart type, modify the chartType useState line
-          5. Keep the comment lines intact
-          6. Do NOT modify file upload handlers, options configuration, or UI components
+          5. If adding multiple data series, also update the corresponding chart component (BarChart, LineChart, etc.) to include additional <Bar> or <Line> components
+          6. Keep the comment lines intact
+          7. Do NOT modify file upload handlers or UI components (unless specifically requested)
 
           WHAT YOU CAN MODIFY:
-          ✅ labels array - the x-axis categories or pie slice names
-          ✅ datasets array - the data values and styling
-          ✅ label property - the legend label
-          ✅ data property - the actual numbers to plot
-          ✅ backgroundColor/borderColor - the chart colors
+          ✅ data array - the array of objects with name/value pairs
+          ✅ object keys - use descriptive names (e.g., 'sales', 'revenue', 'users')
           ✅ chartType initial value - 'bar', 'line', or 'pie'
+          ✅ Chart components (BarChart, LineChart, PieChart) - to add multiple series or customize
 
           WHAT NOT TO MODIFY:
           ❌ handleFileUpload function
-          ❌ options configuration
+          ❌ ResponsiveContainer wrapper
           ❌ UI components or buttons (unless specifically requested)
           ❌ The control panel buttons logic
-          ❌ Anything outside the CHART DATA markers (except chartType useState)
+          ❌ COLORS array (unless adding more colors)
+          ❌ Anything outside the CHART DATA markers (except chartType useState and chart components if needed)
 
           Users can also manually switch chart types using the Control Panel buttons in the UI.`;
 
@@ -459,7 +440,10 @@ export class GeminiService {
       - Be concise in your verbal responses.
     `;
 
-    let currentTurnHistory = [...chatHistory];
+    let currentTurnHistory = chatHistory.map(({ role, parts }) => ({
+      role,
+      parts,
+    }));
 
     const lastMsg = chatHistory[chatHistory.length - 1];
     const userMsgAlreadyInHistory =

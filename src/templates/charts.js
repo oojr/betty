@@ -14,10 +14,7 @@ export const chartsStarter = {
             preview: "vite preview",
           },
           dependencies: {
-            "chart.js": "^4.4.1",
-            "react-chartjs-2": "^5.2.0",
-            papaparse: "^5.4.1",
-            xlsx: "^0.18.5",
+            recharts: "^2.10.0",
             react: "^18.2.0",
             "react-dom": "^18.2.0",
             "lucide-react": "^0.330.0",
@@ -92,7 +89,6 @@ export default {
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
-import 'chart.js/auto'; // Automatically register all components
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -118,93 +114,30 @@ body {
       "App.jsx": {
         file: {
           contents: `import React, { useState } from 'react';
-import { Bar, Line, Pie } from 'react-chartjs-2';
-import { Upload, FileSpreadsheet, BarChart3, PieChart, LineChart } from 'lucide-react';
-import * as XLSX from 'xlsx';
-import Papa from 'papaparse';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { FileSpreadsheet, BarChart3, PieChart as PieChartIcon, LineChart as LineChartIcon } from 'lucide-react';
 
 // -- AGENT INSTRUCTION: You MUST modify this App component to render charts based on user data. --
-// 1. Use the 'chartData' state to populate the charts.
+// 1. Use the 'data' state to populate the charts.
 // 2. You can create new chart components or modify the existing ones.
-// 3. You can parse uploaded files using the handleFileUpload function.
+// 3. Data will be provided via chat - modify the data array between the CHART DATA markers.
 // -----------------------------------------------------------------------------------------------
 
 function App() {
   // -- CHART DATA START (Keep this comment line) --
-  const [data, setData] = useState({
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Sales 2024',
-        data: [12, 19, 3, 5, 2, 3],
-        backgroundColor: 'rgba(59, 130, 246, 0.5)', // Blue-500
-        borderColor: 'rgba(59, 130, 246, 1)',
-        borderWidth: 1,
-      },
-    ],
-  });
+  const [data, setData] = useState([
+    { name: 'Jan', value: 12 },
+    { name: 'Feb', value: 19 },
+    { name: 'Mar', value: 3 },
+    { name: 'Apr', value: 5 },
+    { name: 'May', value: 2 },
+    { name: 'Jun', value: 3 },
+  ]);
   // -- CHART DATA END (Keep this comment line) --
 
   const [chartType, setChartType] = useState('bar');
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      if (file.name.endsWith('.csv')) {
-        Papa.parse(file, {
-          complete: (results) => {
-            console.log("CSV Parsed:", results);
-            alert("CSV uploaded! Ask Betty to visualize this data.");
-          }
-        });
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        console.log("Excel Parsed:", data);
-        alert("Excel uploaded! Ask Betty to visualize this data.");
-      }
-    };
-    
-    if (file.name.endsWith('.csv')) {
-        reader.readAsText(file);
-    } else {
-        reader.readAsBinaryString(file);
-    }
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: { color: '#cbd5e1' }
-      },
-      title: {
-        display: true,
-        text: 'Data Visualization Dashboard',
-        color: '#f8fafc',
-        font: { size: 16 }
-      },
-    },
-    scales: {
-        y: {
-            grid: { color: '#334155' }, 
-            ticks: { color: '#94a3b8' },
-            beginAtZero: true
-        },
-        x: {
-            grid: { color: '#334155' }, 
-            ticks: { color: '#94a3b8' } 
-        }
-    }
-  };
+  const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
 
   return (
     <div className="min-h-screen bg-slate-900 p-8 text-slate-100 font-sans">
@@ -213,24 +146,64 @@ function App() {
             <div className="bg-blue-500/10 p-3 rounded-full"><BarChart3 className="text-blue-500 w-8 h-8" /></div>
             <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Data Analysis Core</h1>
-                <p className="text-slate-400">Upload data or ask Betty to fetch and visualize it.</p>
+                <p className="text-slate-400">Ask Betty to fetch and visualize your data.</p>
             </div>
-        </div>
-        <div className="flex gap-2">
-            <label className="flex items-center gap-2 cursor-pointer bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition-colors border border-slate-700">
-                <Upload className="w-4 h-4" />
-                <span className="text-sm font-medium">Upload CSV/Excel</span>
-                <input type="file" onChange={handleFileUpload} className="hidden" accept=".csv, .xlsx, .xls" />
-            </label>
         </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-slate-800/50 p-6 rounded-xl border border-slate-700 backdrop-blur-sm min-h-[400px]">
             <div className="h-[350px] w-full">
-                {chartType === 'bar' && <Bar options={options} data={data} />}
-                {chartType === 'line' && <Line options={options} data={data} />}
-                {chartType === 'pie' && <div className="h-full flex justify-center"><Pie options={options} data={data} /></div>}
+                <ResponsiveContainer width="100%" height="100%">
+                    {chartType === 'bar' && (
+                        <BarChart data={data}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <XAxis dataKey="name" stroke="#94a3b8" />
+                            <YAxis stroke="#94a3b8" />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                                labelStyle={{ color: '#f8fafc' }}
+                            />
+                            <Legend wrapperStyle={{ color: '#cbd5e1' }} />
+                            <Bar dataKey="value" fill="#3b82f6" name="Sales 2024" />
+                        </BarChart>
+                    )}
+                    {chartType === 'line' && (
+                        <LineChart data={data}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                            <XAxis dataKey="name" stroke="#94a3b8" />
+                            <YAxis stroke="#94a3b8" />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                                labelStyle={{ color: '#f8fafc' }}
+                            />
+                            <Legend wrapperStyle={{ color: '#cbd5e1' }} />
+                            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} name="Sales 2024" />
+                        </LineChart>
+                    )}
+                    {chartType === 'pie' && (
+                        <PieChart>
+                            <Pie
+                                data={data}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => \`\${name}: \${(percent * 100).toFixed(0)}%\`}
+                                outerRadius={120}
+                                fill="#8884d8"
+                                dataKey="value"
+                            >
+                                {data.map((entry, index) => (
+                                    <Cell key={\`cell-\${index}\`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
+                                labelStyle={{ color: '#f8fafc' }}
+                            />
+                        </PieChart>
+                    )}
+                </ResponsiveContainer>
             </div>
         </div>
 
@@ -242,10 +215,10 @@ function App() {
                         <BarChart3 className="w-4 h-4" /> Bar Chart
                     </button>
                     <button onClick={() => setChartType('line')} className={\`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all \${chartType === 'line' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700 text-slate-400'}\`}>
-                        <LineChart className="w-4 h-4" /> Line Chart
+                        <LineChartIcon className="w-4 h-4" /> Line Chart
                     </button>
                     <button onClick={() => setChartType('pie')} className={\`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all \${chartType === 'pie' ? 'bg-blue-600 text-white' : 'hover:bg-slate-700 text-slate-400'}\`}>
-                        <PieChart className="w-4 h-4" /> Pie Chart
+                        <PieChartIcon className="w-4 h-4" /> Pie Chart
                     </button>
                 </div>
             </div>
