@@ -1,16 +1,26 @@
-# React + Vite
+# SLIDEBITS BETTY
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Betty is an AI agent powered by Google Gemini, designed to generate and modify various types of projects within a fully interactive WebContainer environment. Users interact with Betty through a chat interface, providing commands and receiving real-time updates and previews.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Multimodal Project Generation:** Betty can create:
+    - **Presentation Slides:** Generate slide decks from markdown with AI-generated visuals.
+    - **Mobile Applications:** Prototype React Native Expo apps with live interactive previews.
+    - **Responsive Websites:** Build websites using Next.js and Tailwind CSS.
+    - **Motion Videos:** Programmatic video creation using Remotion.
+    - **Data Analysis:** Upload Excel sheets for insights and visualization dashboards.
+    - **Word Documents:** Generate professional reports, contracts, and letters.
+- **WebContainer Integration:** Projects are built and run in a sandboxed WebContainer, providing a full development environment directly in the browser.
+- **Real-time Preview:** See your generated projects come to life instantly in the integrated preview stage.
+- **Chat-based Interaction:** Communicate with Betty using natural language to define, refine, and modify your projects.
+- **File Attachment Support:** Attach files to your prompts to provide Betty with context or data.
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+To run this project, you will need a Google Gemini API Key. 
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1.  **Clone the repository.**
+2.  **Install dependencies:** `npm install` or `yarn install`
+3.  **Run the development server:** `npm run dev` or `yarn dev`
+4.  **Enter your Google Gemini API Key** when prompted in the application to activate Betty's neural core.
